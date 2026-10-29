@@ -2157,15 +2157,25 @@
     }
 
     function renderCharts() {
+      // 1. GRAFIK HARIAN (Mengikuti filter mingguan: Minggu Ini / Minggu Lalu)
       const dailyCtx = document.getElementById("dailyChart");
       if (dailyCtx) {
         let days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         let dailyTotals = [0, 0, 0, 0, 0, 0, 0];
 
         let now = new Date();
-        let startMinggu = new Date(now);
-        startMinggu.setDate(now.getDate() - now.getDay());
-        startMinggu.setHours(0, 0, 0, 0);
+        let currStartDate = new Date(now);
+        currStartDate.setHours(0, 0, 0, 0);
+        let dayOfWeek = currStartDate.getDay();
+        
+        let startCurObj = new Date(currStartDate);
+        startCurObj.setDate(currStartDate.getDate() - dayOfWeek);
+
+        let startLastObj = new Date(startCurObj);
+        startLastObj.setDate(startCurObj.getDate() - 7);
+
+        let omsetMingguMode = document.getElementById("filterOmsetMinggu") ? document.getElementById("filterOmsetMinggu").value : "current";
+        let startMinggu = (omsetMingguMode === "last") ? startLastObj : startCurObj;
 
         let weekDateStrings = [];
         for (let i = 0; i < 7; i++) {
@@ -2206,17 +2216,20 @@
         });
       }
 
+      // 2. GRAFIK BULANAN (Mengikuti pilihan filter tahun)
       const monthlyCtx = document.getElementById("monthlyChart");
       if (monthlyCtx) {
         let months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         let monthlyTotals = new Array(12).fill(0);
-        let currentYear = new Date().getFullYear();
+        
+        let filterTahunEl = document.getElementById("filterOmsetTahun");
+        let selectedYear = filterTahunEl ? Number(filterTahunEl.value) : new Date().getFullYear();
 
         globalGuestReports.forEach(item => {
           let d = getValidDate(item);
           if (!d) return;
 
-          if (d.getFullYear() === currentYear) {
+          if (d.getFullYear() === selectedYear) {
             let monthIndex = d.getMonth();
             if (monthIndex >= 0 && monthIndex < 12) {
               let amt = Number(String(item.total || item.nominal || 0).replace(/[^0-9]/g, '')) || 0;
@@ -2250,6 +2263,7 @@
         });
       }
     }
+
 
     function updateRoomStatuses() {
       const rooms = ["14B", "15", "16", "19"];
